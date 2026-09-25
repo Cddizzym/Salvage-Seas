@@ -56,9 +56,9 @@ func run_test() -> void:
 	await physics_frame
 	game._physics_process(0.1)
 	assert(game.player.position.y > -0.2)
-	game.player.position = Vector3(-7.75, 0.05, -0.3)
+	game.player.position = Vector3(-7.75, 0.05, -1.0)
 	game.player.rotation.y = 0
-	game.camera.rotation.x = -0.72
+	game.camera.rotation.x = -0.5
 	await physics_frame
 	assert(game.look_target() == "ship_cargo")
 	game.pick_up_cargo()
@@ -94,5 +94,13 @@ func run_test() -> void:
 	game.ship_cargo = 0
 	game.load_game()
 	assert(game.money == 5 and game.ship_cargo == 1)
+	game.player.position = Vector3(0, 0.05, 4.97)
+	await physics_frame
+	game._physics_process(0.016)
+	assert(game.room == "dock")
+	game.player.position = Vector3(-13.25, 0.05, 13.85)
+	await physics_frame
+	game._physics_process(0.016)
+	assert(game.room == "shop")
 	print("First-person shop loop passed")
 	quit(0)

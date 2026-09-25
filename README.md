@@ -1,6 +1,8 @@
-# Salvage Seas v0.04 — first-person seaside shop visual preview
+# Salvage Seas v0.05 — corrected seaside shop visual preview
 
 The first-person shop now uses the purchased **Stylized Fantasy Interior** floor, walls, furniture, shelving, doorway, rug and light fittings. Its door opens onto an **outdoor seaside dock**, with a broad sea basin, two walkable quays, a small workshop, a physical boat to board, and a seaport town along the shore. The underlying prototype interactions and timers still work. This pass is for judging how the art feels together; lighting, boat materials and port placement need further art direction.
+
+v0.05 fixes the first art preview: the earlier export displayed floating dock tyres instead of the boat, and stretched an interior texture atlas across blockout walls. The boat now uses its assembled hull, cabin and deck meshes. Neutral blockout materials sit behind UV-mapped purchased wall and floor meshes, and the seaport houses have been moved closer to shore. Boarding, cargo collection, the shop doorway and the return entrance have been tested.
 
 ## Controls
 
@@ -18,7 +20,7 @@ Return to the shop; look at one of the eight slots on the two central shelves, p
 
 A day lasts 10 real minutes; night lasts 5. No customers visit at night. Open the store again each morning. At night, the counter allows you to sleep early. Rarity definitions span Junk, Common, Uncommon, Rare, Epic, Legendary and Divinity; only Junk items exist so far.
 
-This build does not yet contain room purchases, debt collection, requests, sale-price negotiation, character animation or a visual star map. The dock chart presents only the starter tile's regions. The purchased **Cyberpunk Boat** FBX references external TGA images that were absent from the files supplied, so its geometry uses a temporary dark painted material. Its hull is modeled; walking and cargo use invisible prototype collision. The seaport FBX included its image data, and the interior textures came from the separate private repository.
+This build does not yet contain room purchases, debt collection, requests, sale-price negotiation, character animation or a visual star map. The dock chart presents only the starter tile's regions. The purchased **Cyberpunk Boat** FBX references external TGA images that were absent from the files supplied, so its actual boat geometry uses temporary dark painted materials. Walking and cargo use invisible prototype collision. The seaport FBX included its image data, and the interior textures came from the separate private repository.
 
 ## Licensed art
 

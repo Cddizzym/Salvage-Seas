@@ -136,9 +136,11 @@ Sources:
 
 ## Decisions for the next design discussion
 
-### Seaside visual prototype (v0.04)
+### Seaside visual prototype (v0.05)
 
 The playable layout now places the Stylized Fantasy Interior shop inside a shore-side house. Walking through the shop's dock door moves the player to the open-air west quay; returning through the exterior house entrance moves them back to the shop. Water occupies the middle of a broad basin, with side walkways, a small workshop, a gangway and the salvage boat. A trimmed section of the Medieval Seaport Town supplies shoreline buildings. The supplied Cyberpunk Boat geometry replaces the blockout hull visually; its separate TGA textures are still missing, so it currently has a temporary patinated finish. Both shop and dock continue to use simple collision proxies for gameplay. Purchased sources live privately; the public repo contains fallback geometry and setup documentation.
+
+v0.05 uses the assembled hull and cabin from the boat FBX. The previous visual export mistakenly selected a separate group of dock tyres. It also removes texture atlas images from generic boxes, because their UV mapping made shop walls appear as huge distorted details. The provided interior models retain their proper textured UVs. Room transitions and cargo collection were verified after the correction.
 
 Next visual pass: inspect the art preview in motion, adjust scale and camera height, and obtain the boat texture maps if available. Once the style is approved, align lighting and materials across the fantasy interior, medieval harbor and futuristic boat.
 

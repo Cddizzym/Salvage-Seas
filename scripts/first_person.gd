@@ -139,13 +139,15 @@ func build_room(destination: String) -> void:
 	shelf_anchors.clear()
 	shelf_goods.clear()
 	customer = null
-	var timber := licensed_material("Floor_01", "#765134")
-	var timber_light := licensed_material("Table_01", "#a97a45")
-	var timber_dark := licensed_material("Bookshelf_01", "#422e26")
-	var plaster := licensed_material("Wall_01", "#dfd5b7")
+	# Atlas images belong on their matching UV-mapped meshes; boxes sample the
+	# entire atlas on every face and turn walls into giant distorted props.
+	var timber := material("#765134")
+	var timber_light := material("#a97a45")
+	var timber_dark := material("#422e26")
+	var plaster := material("#665747")
 	var brass := material("#cf9e4c", 0.45)
 	var sea := material("#344e52")
-	var rug := licensed_material("Rug_01", "#8f3f37")
+	var rug := material("#8f3f37")
 	var metal := material("#526267", 0.3)
 	if room == "dock":
 		build_expanded_dock(timber, timber_light, timber_dark, brass, metal, sea)
@@ -178,8 +180,13 @@ func build_room(destination: String) -> void:
 	for x in [-3.5, 1.5]:
 		for z in [-2.5, 2.5]:
 			place_model(world, "interior/Floor_01", Vector3(x, 0.02, z))
-	for x in [-5.55, -0.5, 4.55]:
-		place_model(world, "interior/Wall_01", Vector3(x, 0, -4.86))
+	for x in [-4.0, 0.0, 4.0]:
+		place_model(world, "interior/Wall_01", Vector3(x, 0, -4.86), 0.8)
+	for x in [-5.83, 5.83]:
+		for z in [-2.5, 2.5]:
+			place_model(world, "interior/Wall_01", Vector3(x, 0, z), 0.9, PI / 2.0)
+	for x in [-3.6, 3.6]:
+		place_model(world, "interior/Wall_01", Vector3(x, 0, 4.85), 0.96, PI)
 	place_model(world, "interior/Rug_01", Vector3(0, 0.055, 0.25), 0.8)
 	place_model(world, "interior/Chandelier_01", Vector3(0, 3.4, 0), 0.75)
 
@@ -307,16 +314,16 @@ func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: 
 	for z in [-9.0, 1.5, 9.0]:
 		box(world, Vector3(-14.0, 0.38, z), Vector3(0.9, 0.75, 1.1), dark, true)
 	# The shop is a building on the shore. Its doorway is open at quay level.
-	var masonry := licensed_material("Wall_01", "#8a7860")
-	var roof := licensed_material("Wall_Trim_01", "#3e342c")
+	var masonry := material("#827660")
+	var roof := material("#3e342c")
 	box(world, Vector3(-16.0, 2.5, 14.46), Vector3(3.2, 5.0, 0.52), masonry, true)
 	box(world, Vector3(-10.45, 2.5, 14.46), Vector3(3.2, 5.0, 0.52), masonry, true)
 	box(world, Vector3(-13.25, 4.15, 14.46), Vector3(2.4, 1.65, 0.52), masonry, true)
 	box(world, Vector3(-13.25, 5.15, 16), Vector3(9.6, 0.45, 4.5), roof)
 	place_model(world, "interior/Door_Rounded_Frame_01", Vector3(-13.25, 0, 14.12), 1.15)
 	# Keep the imported seaport town behind the playable pier as a textured shoreline.
-	place_model(world, "seaport_houses", Vector3(-19.0, -0.12, 20.0), 0.48)
-	place_model(world, "seaport_houses", Vector3(25.0, -0.15, -26.0), 0.55, 2.6)
+	place_model(world, "seaport_houses", Vector3(-30.0, -0.12, 22.0), 1.0)
+	place_model(world, "seaport_houses", Vector3(29.0, -0.15, -17.0), 0.8, 2.6)
 	# Walkable southern entrance leading to the shop.
 	var exit_mark := box(world, Vector3(-13.25, 0.025, 13.78), Vector3(2.9, 0.04, 0.35), brass)
 	tag(exit_mark, "shop_door")
@@ -362,18 +369,18 @@ func build_ship(wood: Material, trim: Material, dark: Material, metal: Material,
 		box(salvage_ship, Vector3(x, 0.38, 0), Vector3(0.12, 0.7, 7.9), trim)
 		for z in [-3.5, -2.0, 0.0, 2.0, 3.5]:
 			box(salvage_ship, Vector3(x, 0.85, z), Vector3(0.12, 0.9, 0.12), metal)
-	box(salvage_ship, Vector3(0, 0.65, -2.8), Vector3(2.0, 1.3, 1.8), dark, true)
-	box(salvage_ship, Vector3(0, 1.42, -2.8), Vector3(2.2, 0.18, 2.0), trim)
-	box(salvage_ship, Vector3(0, 1.05, -1.84), Vector3(1.2, 0.4, 0.05), material("#618b94"))
+	box(salvage_ship, Vector3(0, 0.65, 2.8), Vector3(2.0, 1.3, 1.8), dark, true)
+	box(salvage_ship, Vector3(0, 1.42, 2.8), Vector3(2.2, 0.18, 2.0), trim)
+	box(salvage_ship, Vector3(0, 1.05, 1.84), Vector3(1.2, 0.4, 0.05), material("#618b94"))
 	box(salvage_ship, Vector3(0, 0.05, 3.6), Vector3(3.3, 0.08, 0.3), brass)
-	var boat_art := place_model(salvage_ship, "boat", Vector3(0, -0.28, 0), 0.47)
+	var boat_art := place_model(salvage_ship, "boat", Vector3(0, 0, 0), 0.45, -PI / 2.0)
 	if boat_art != null:
 		# Hidden blockout meshes retain simple, reliable boarding collision.
 		for child in salvage_ship.get_children():
 			if child is MeshInstance3D: child.visible = false
 	cargo_stack = Node3D.new()
 	cargo_stack.name = "CargoHold"
-	cargo_stack.position = Vector3(0.3, 0, 1.0)
+	cargo_stack.position = Vector3(0.3, 0, -1.2)
 	salvage_ship.add_child(cargo_stack)
 	gangway = Node3D.new()
 	gangway.name = "Gangway"

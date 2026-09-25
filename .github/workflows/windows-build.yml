@@ -36,9 +36,9 @@ jobs:
           Godot_v4.5.1-stable_linux.x86_64 --headless --path . --export-release "Windows Desktop" builds/windows/SalvageSeas.exe
           cp README.md builds/windows/README.md
           cd builds/windows
-          zip -r ../Salvage-Seas-v0.04-Windows-fallback.zip .
+          zip -r ../Salvage-Seas-v0.05-Windows-fallback.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: Salvage-Seas-v0.04-Windows-fallback
-          path: builds/Salvage-Seas-v0.04-Windows-fallback.zip
+          name: Salvage-Seas-v0.05-Windows-fallback
+          path: builds/Salvage-Seas-v0.05-Windows-fallback.zip
           retention-days: 30
