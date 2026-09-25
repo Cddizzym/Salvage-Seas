@@ -28,6 +28,7 @@ jobs:
           set -euo pipefail
           Godot_v4.5.1-stable_linux.x86_64 --headless --path . --editor --quit
           Godot_v4.5.1-stable_linux.x86_64 --headless --path . --script res://tests/prototype_test.gd -- --test
+          Godot_v4.5.1-stable_linux.x86_64 --headless --path . --script res://tests/first_person_test.gd -- --test
       - name: Export and package
         run: |
           set -euo pipefail
@@ -35,10 +36,9 @@ jobs:
           Godot_v4.5.1-stable_linux.x86_64 --headless --path . --export-release "Windows Desktop" builds/windows/SalvageSeas.exe
           cp README.md builds/windows/README.md
           cd builds/windows
-          zip -r ../Salvage-Seas-v0.01-Windows.zip .
+          zip -r ../Salvage-Seas-v0.02-Windows.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: Salvage-Seas-v0.01-Windows
-          path: builds/Salvage-Seas-v0.01-Windows.zip
+          name: Salvage-Seas-v0.02-Windows
+          path: builds/Salvage-Seas-v0.02-Windows.zip
           retention-days: 30
-

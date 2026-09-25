@@ -1,6 +1,10 @@
 # Salvage Seas — Shopkeeping Game Concept
 
-Status: v0.01 prototype specification, updated 25 September 2026. Implemented features are identified below; later ideas remain proposals.
+Status: updated 25 September 2026. The v0.01 interface prototype did not meet the desired feel. v0.02 switches the playable starting scene to a first-person 3D shop and dock; the wider design remains in development.
+
+## Visual and interaction correction
+
+The reference is a compact, cosy shop with wood floors, shelves, counter, windows and customers occupying a real room. Although that reference uses an overhead view, the chosen direction for Salvage Seas is first-person. The player walks with WASD, looks with the mouse, and interacts with actual shelves, a dock chart, a worktable and a counter. The HUD is minimal, with contextual menus only when interacting. This is an early 3D blockout, not finished art; the reference's warmth and level of detail require a later visual pass.
 
 ## Confirmed direction
 
@@ -28,7 +32,7 @@ The prototype uses a real-time clock. Day lasts 10 minutes and night lasts 5 min
 
 The world map uses star-linked territory tiles. The starter vessel can initially salvage only within the player's Homewater tile. Selecting an unlocked world tile zooms into a local map containing several limited salvage regions. Each successful trip depletes its chosen region by one recovery; events may replenish regions in a later version.
 
-The player's home uses a room system. The Dock & Workshop and Shop are unlocked initially and selected from a pull-out-style room list. Additional rooms will eventually be purchased. The starting dock contains a small workshop and the player's ship.
+The player's home uses a room system. The Dock & Workshop and Shop are unlocked initially; in v0.02, the player walks through a doorway between them. A compact room selector may be useful later when the building grows. Additional rooms will eventually be purchased. The starting dock contains a small workshop and the player's ship.
 
 The shop is tile based. The first version provides two fixed display shelves, each containing a 2×2 arrangement of four 1×1 item slots. Items may use larger footprints later.
 
@@ -89,7 +93,7 @@ A darker maritime atmosphere is a proposed continuation of the earlier project's
 
 ## First playable target
 
-Implemented v0.01 scope: one home tile with three salvage regions, the Dock & Workshop and Shop rooms, four starter items, one unpacking machine, fixed base-price sales, two 2×2 shelves, simple wandering customers, a real-time day/night cycle, global pause, and save/load. Requests, debt payments, room purchases and a broader economy are not yet implemented.
+Implemented v0.02 scope: a physical shop and dock with three starter salvage regions accessed through a chart, four starter items, one unpacking machine, fixed base-price sales, two shelves with four physical slots each, simple wandering customers, a real-time day/night cycle, global pause, and save/load. The full visual star map, requests, debt payments, room purchases, larger item footprints and a broader economy are not yet implemented. The old v0.01 interface remains in the repository for reference but is not the playable starting scene.
 
 Completion criteria:
 

@@ -1,10 +1,10 @@
-; Salvage Seas v0.01 — Godot 4.5.1
+; Salvage Seas v0.02 — Godot 4.5.1
 config_version=5
 
 [application]
 config/name="Salvage Seas"
-config/version="0.01"
-run/main_scene="res://scenes/main.tscn"
+config/version="0.02"
+run/main_scene="res://scenes/first_person.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 
 [display]
@@ -19,5 +19,4 @@ window/stretch/mode="canvas_items"
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.019, 0.031, 0.036, 1)
-
+environment/defaults/default_clear_color=Color(0.11, 0.16, 0.18, 1)
