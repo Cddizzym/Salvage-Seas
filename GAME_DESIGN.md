@@ -1,6 +1,6 @@
 # Salvage Seas — Shopkeeping Game Concept
 
-Status: initial design proposal, 25 September 2026. This document records the requested direction and proposes a small first playable scope; it does not describe implemented features.
+Status: v0.01 prototype specification, updated 25 September 2026. Implemented features are identified below; later ideas remain proposals.
 
 ## Confirmed direction
 
@@ -22,7 +22,15 @@ Salvage gives the shop interesting stock and a reason to venture out. The shop s
 4. Serve customers, make sales, and fulfil accepted orders.
 5. Review revenue, expenses, and debt; save and advance to the next day.
 
-Start with discrete activity periods rather than a demanding real-time clock. Exact day length, activity costs, and the balance between sailing and shop time remain playtest decisions.
+The prototype uses a real-time clock. Day lasts 10 minutes and night lasts 5 minutes. Customers only visit during the day, and the player must manually open the store each morning. Night remains useful for workshop work, stocking and item management. Pausing freezes the clock, customers, ship and all machines.
+
+## Confirmed world and home structure
+
+The world map uses star-linked territory tiles. The starter vessel can initially salvage only within the player's Homewater tile. Selecting an unlocked world tile zooms into a local map containing several limited salvage regions. Each successful trip depletes its chosen region by one recovery; events may replenish regions in a later version.
+
+The player's home uses a room system. The Dock & Workshop and Shop are unlocked initially and selected from a pull-out-style room list. Additional rooms will eventually be purchased. The starting dock contains a small workshop and the player's ship.
+
+The shop is tile based. The first version provides two fixed display shelves, each containing a 2×2 arrangement of four 1×1 item slots. Items may use larger footprints later.
 
 ## Proposed systems
 
@@ -34,13 +42,27 @@ Readable feedback should explain why an item sold or was rejected. Stocking and 
 
 ### Salvage and inventory
 
-Use short trips to a small salvage area. Recovered objects include saleable goods, damaged goods, and raw materials. Cargo capacity limits what comes home. A simple hold/release winch-tension interaction is a candidate inherited from the earlier concept, subject to inspecting the implementation.
+The first salvage trip is an automated 3 minute 30 second expedition to a selected Homewater salvage region. It returns two Salvaged Junk Bundles. Direct ship control, cargo limits and a hold/release winch interaction remain later candidates.
 
 Keep one shared item definition system for cargo, storage, displays, recipes, and requests. Transfers must never duplicate or lose items.
 
 ### Workshop and machines
 
-Start with a restoration bench. Later purchases could add a dismantler, furnace, woodworking station, or specialist apparatus. Machines consume specified inputs and time to create outputs. Additional capacity, speed, and recipes give money useful purposes beyond debt.
+Start with an unpacking table. It consumes one Salvaged Junk Bundle over 20 seconds of unpaused game time and returns one each of Crude Wood, Oxidized Copper and Crumbling Stone Plates. Later purchases could add a restoration bench, dismantler, furnace, woodworking station, or specialist apparatus. Machines consume specified inputs and real time to create outputs. Additional capacity, speed, and recipes give money useful purposes beyond debt.
+
+### Items, values and rarities
+
+Every item has a base value. Early customers buy stocked items at that base value; events and market variation will modify values later. The complete rarity ladder is:
+
+1. Junk
+2. Common
+3. Uncommon
+4. Rare
+5. Epic
+6. Legendary
+7. Divinity
+
+The first four items—Salvaged Junk Bundle, Crude Wood, Oxidized Copper and Crumbling Stone Plates—are Junk rarity.
 
 Illustrative chains, not final content:
 
@@ -67,7 +89,7 @@ A darker maritime atmosphere is a proposed continuation of the earlier project's
 
 ## First playable target
 
-Proposed scope: one shop, one short salvage location, about eight item types, one restoration machine, basic pricing and customers, one request template, one debt instalment, and save/load.
+Implemented v0.01 scope: one home tile with three salvage regions, the Dock & Workshop and Shop rooms, four starter items, one unpacking machine, fixed base-price sales, two 2×2 shelves, simple wandering customers, a real-time day/night cycle, global pause, and save/load. Requests, debt payments, room purchases and a broader economy are not yet implemented.
 
 Completion criteria:
 
