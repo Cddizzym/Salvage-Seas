@@ -56,6 +56,7 @@ var overlay_body: VBoxContainer
 var shelf_anchors: Array[Node3D] = []
 var shelf_goods: Array[Node3D] = []
 var note_left := 0.0
+var licensed_materials := {}
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -69,6 +70,28 @@ func material(hex: String, rough := 1.0) -> StandardMaterial3D:
 	m.albedo_color = Color(hex)
 	m.roughness = rough
 	return m
+
+func licensed_material(name: String, fallback: String) -> StandardMaterial3D:
+	if licensed_materials.has(name): return licensed_materials[name]
+	var surface := material(fallback)
+	var path := "res://assets/licensed/interior/tex_%s.png" % name
+	if ResourceLoader.exists(path):
+		surface.albedo_texture = load(path)
+	licensed_materials[name] = surface
+	return surface
+
+func place_model(parent: Node3D, file_name: String, pos: Vector3, size := 1.0, yaw := 0.0) -> Node3D:
+	var path := "res://assets/licensed/%s.glb" % file_name
+	if not ResourceLoader.exists(path): return null
+	var scene := load(path) as PackedScene
+	if scene == null: return null
+	var instance := scene.instantiate() as Node3D
+	if instance == null: return null
+	instance.position = pos
+	instance.scale = Vector3.ONE * size
+	instance.rotation.y = yaw
+	parent.add_child(instance)
+	return instance
 
 func box(parent: Node3D, pos: Vector3, size: Vector3, surface: Material, collision := false) -> MeshInstance3D:
 	var mesh_node := MeshInstance3D.new()
@@ -116,13 +139,13 @@ func build_room(destination: String) -> void:
 	shelf_anchors.clear()
 	shelf_goods.clear()
 	customer = null
-	var timber := material("#765134")
-	var timber_light := material("#a97a45")
-	var timber_dark := material("#422e26")
-	var plaster := material("#dfd5b7")
+	var timber := licensed_material("Floor_01", "#765134")
+	var timber_light := licensed_material("Table_01", "#a97a45")
+	var timber_dark := licensed_material("Bookshelf_01", "#422e26")
+	var plaster := licensed_material("Wall_01", "#dfd5b7")
 	var brass := material("#cf9e4c", 0.45)
 	var sea := material("#344e52")
-	var rug := material("#8f3f37")
+	var rug := licensed_material("Rug_01", "#8f3f37")
 	var metal := material("#526267", 0.3)
 	if room == "dock":
 		build_expanded_dock(timber, timber_light, timber_dark, brass, metal, sea)
@@ -151,6 +174,14 @@ func build_room(destination: String) -> void:
 	box(world, Vector3(0, 0.018, 0.25), Vector3(3.3, 0.02, 3.7), rug)
 	box(world, Vector3(0, 0.028, 0.25), Vector3(2.95, 0.023, 3.35), material("#b68455"))
 	box(world, Vector3(0, 0.033, 0.25), Vector3(2.65, 0.025, 3.05), rug)
+	# Place actual licensed architectural and furnishing meshes among the collision fixtures.
+	for x in [-3.5, 1.5]:
+		for z in [-2.5, 2.5]:
+			place_model(world, "interior/Floor_01", Vector3(x, 0.02, z))
+	for x in [-5.55, -0.5, 4.55]:
+		place_model(world, "interior/Wall_01", Vector3(x, 0, -4.86))
+	place_model(world, "interior/Rug_01", Vector3(0, 0.055, 0.25), 0.8)
+	place_model(world, "interior/Chandelier_01", Vector3(0, 3.4, 0), 0.75)
 
 	# Tall windows with visible frames give the small shop a horizon and some warmth.
 	for x in [-3.4, 0.0, 3.4]:
@@ -192,6 +223,9 @@ func build_shop(wood: Material, trim: Material, brass: Material) -> void:
 	# Counter at the front, two four-slot shelves in the centre, extra empty fixtures at the walls.
 	var counter := box(world, Vector3(-3.8, 0.55, 3.3), Vector3(2.7, 1.1, 1.1), wood, true)
 	var counter_top := box(world, Vector3(-3.8, 1.17, 3.3), Vector3(2.95, 0.16, 1.3), trim, true)
+	place_model(world, "interior/Table_01", Vector3(-4.2, 0.05, 3.15), 0.7)
+	place_model(world, "interior/Chair_01", Vector3(-4.65, 0.05, 2.2), 0.8, 1.55)
+	place_model(world, "interior/CandleCluster_01_LOD0", Vector3(-3.7, 1.3, 3.3), 0.7)
 	tag(counter_top, "counter")
 	tag(counter, "counter")
 	box(world, Vector3(-3.8, 1.3, 3.3), Vector3(0.3, 0.17, 0.3), brass)
@@ -201,6 +235,7 @@ func build_shop(wood: Material, trim: Material, brass: Material) -> void:
 		fixture.position = Vector3(shelf_x, 0.0, -0.85)
 		fixture.name = "Shelf%d" % (shelf_index + 1)
 		world.add_child(fixture)
+		place_model(fixture, "interior/Bookshelf_01", Vector3(0, 0.02, 0), 0.85)
 		box(fixture, Vector3(0, 0.50, 0), Vector3(2.05, 1.0, 1.25), wood, true)
 		box(fixture, Vector3(0, 1.07, 0), Vector3(2.25, 0.14, 1.45), trim)
 		for row in range(2):
@@ -214,6 +249,7 @@ func build_shop(wood: Material, trim: Material, brass: Material) -> void:
 				tag(slot, "slot:%d" % index)
 				box(anchor, Vector3(0, 0.015, 0.28), Vector3(0.88, 0.035, 0.03), brass)
 	for x in [-4.7, 4.7]:
+		place_model(world, "interior/Bookshelf_01", Vector3(x, 0, -2.0), 0.8, 1.57)
 		box(world, Vector3(x, 0.82, -2.0), Vector3(0.45, 1.6, 2.35), wood, true)
 		for y in [0.35, 0.9, 1.5]:
 			box(world, Vector3(x, y, -2.0), Vector3(0.6, 0.12, 2.5), trim)
@@ -222,15 +258,17 @@ func build_shop(wood: Material, trim: Material, brass: Material) -> void:
 	# Reachable doorway trigger; the player can also walk into it.
 	var threshold := box(world, Vector3(0, 0.08, 4.72), Vector3(2.1, 0.15, 0.45), trim)
 	tag(threshold, "dock_door")
+	place_model(world, "interior/Door_Rounded_Frame_01", Vector3(0, 0, 4.75), 1.0, PI)
 	if shop_open and customer_left > 0:
 		refresh_customer()
 
 func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: Material, metal: Material, sea: Material) -> void:
-	# About 70% of the footprint is open basin; narrow walkways flank both sides.
+	# Outdoor harbor: the house opens onto a broad basin with long side quays.
 	var water := StandardMaterial3D.new()
 	water.albedo_color = Color("#28525b")
 	water.metallic = 0.18
 	water.roughness = 0.25
+	box(world, Vector3(0, -1.12, -44), Vector3(260.0, 0.12, 230.0), water)
 	box(world, Vector3(0, -1.05, 0), Vector3(23.0, 0.12, 26.5), water)
 	for i in range(17):
 		var z := -12.0 + i * 1.5
@@ -238,6 +276,9 @@ func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: 
 	# West-side working quay and a narrower opposite quay, spanning the length of the basin.
 	for x in [-13.25, 13.25]:
 		box(world, Vector3(x, -0.14, 0), Vector3(3.5, 0.28, 28.0), wood, true)
+		for z in [-10.0, -3.5, 3.0, 9.5]:
+			var bollard := box(world, Vector3(x + (-1.28 if x < 0 else 1.28), 0.48, z), Vector3(0.34, 0.94, 0.34), metal, true)
+			box(world, bollard.position + Vector3(0, 0.4, 0), Vector3(0.48, 0.12, 0.48), brass)
 		for z in range(-13, 14):
 			box(world, Vector3(x, 0.015, float(z)), Vector3(3.45, 0.012, 0.025), dark)
 		var rail_x := -14.82 if x < 0 else 14.82
@@ -265,6 +306,17 @@ func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: 
 	box(world, Vector3(-13.64, 1.25, 10.5), Vector3(0.02, 0.05, 0.95), brass)
 	for z in [-9.0, 1.5, 9.0]:
 		box(world, Vector3(-14.0, 0.38, z), Vector3(0.9, 0.75, 1.1), dark, true)
+	# The shop is a building on the shore. Its doorway is open at quay level.
+	var masonry := licensed_material("Wall_01", "#8a7860")
+	var roof := licensed_material("Wall_Trim_01", "#3e342c")
+	box(world, Vector3(-16.0, 2.5, 14.46), Vector3(3.2, 5.0, 0.52), masonry, true)
+	box(world, Vector3(-10.45, 2.5, 14.46), Vector3(3.2, 5.0, 0.52), masonry, true)
+	box(world, Vector3(-13.25, 4.15, 14.46), Vector3(2.4, 1.65, 0.52), masonry, true)
+	box(world, Vector3(-13.25, 5.15, 16), Vector3(9.6, 0.45, 4.5), roof)
+	place_model(world, "interior/Door_Rounded_Frame_01", Vector3(-13.25, 0, 14.12), 1.15)
+	# Keep the imported seaport town behind the playable pier as a textured shoreline.
+	place_model(world, "seaport_houses", Vector3(-19.0, -0.12, 20.0), 0.48)
+	place_model(world, "seaport_houses", Vector3(25.0, -0.15, -26.0), 0.55, 2.6)
 	# Walkable southern entrance leading to the shop.
 	var exit_mark := box(world, Vector3(-13.25, 0.025, 13.78), Vector3(2.9, 0.04, 0.35), brass)
 	tag(exit_mark, "shop_door")
@@ -283,8 +335,14 @@ func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: 
 	world.add_child(light)
 	var env_node := WorldEnvironment.new()
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#718c93")
+	env.background_mode = Environment.BG_SKY
+	var harbor_sky := Sky.new()
+	var sky_paint := ProceduralSkyMaterial.new()
+	sky_paint.sky_top_color = Color("#536777")
+	sky_paint.sky_horizon_color = Color("#b6a692")
+	sky_paint.ground_bottom_color = Color("#34505b")
+	harbor_sky.sky_material = sky_paint
+	env.sky = harbor_sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("#b9d0ce")
 	env.ambient_light_energy = 0.75
@@ -308,6 +366,11 @@ func build_ship(wood: Material, trim: Material, dark: Material, metal: Material,
 	box(salvage_ship, Vector3(0, 1.42, -2.8), Vector3(2.2, 0.18, 2.0), trim)
 	box(salvage_ship, Vector3(0, 1.05, -1.84), Vector3(1.2, 0.4, 0.05), material("#618b94"))
 	box(salvage_ship, Vector3(0, 0.05, 3.6), Vector3(3.3, 0.08, 0.3), brass)
+	var boat_art := place_model(salvage_ship, "boat", Vector3(0, -0.28, 0), 0.47)
+	if boat_art != null:
+		# Hidden blockout meshes retain simple, reliable boarding collision.
+		for child in salvage_ship.get_children():
+			if child is MeshInstance3D: child.visible = false
 	cargo_stack = Node3D.new()
 	cargo_stack.name = "CargoHold"
 	cargo_stack.position = Vector3(0.3, 0, 1.0)

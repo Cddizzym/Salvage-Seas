@@ -1,6 +1,6 @@
-# Salvage Seas v0.03 — first-person shop and dock prototype
+# Salvage Seas v0.04 — first-person seaside shop visual preview
 
-The v0.01 interface-heavy test has been replaced as the starting scene by a walkable 3D shop and dock. v0.03 fixes mouse-look input and expands the dock into a broad open-water basin with side quays, a workshop, a moored ship and boarding gangway. This is a functional blockout, not final art. The shop follows the cosy compact-room reference but uses a true first-person viewpoint rather than Recettear's overhead camera.
+The first-person shop now uses the purchased **Stylized Fantasy Interior** floor, walls, furniture, shelving, doorway, rug and light fittings. Its door opens onto an **outdoor seaside dock**, with a broad sea basin, two walkable quays, a small workshop, a physical boat to board, and a seaport town along the shore. The underlying prototype interactions and timers still work. This pass is for judging how the art feels together; lighting, boat materials and port placement need further art direction.
 
 ## Controls
 
@@ -8,7 +8,7 @@ The v0.01 interface-heavy test has been replaced as the starting scene by a walk
 - Esc: close an interaction panel or release/capture the mouse.
 - P: pause/resume all game timers (day, ship, worktable and customers).
 - F5: save; F9: load. Saves are stored in Godot's user data directory.
-- Walk through the shop doorway to reach the west dock walkway. Follow that walkway to the ship, cross its gangway, and walk through the dock's southern entrance to return to the shop.
+- Walk through the shop doorway into the open-air waterfront. Follow the west quay to the boat, cross its gangway, and walk through the doorway in the shore-side house to return to the shop.
 
 ## Loop
 
@@ -18,10 +18,16 @@ Return to the shop; look at one of the eight slots on the two central shelves, p
 
 A day lasts 10 real minutes; night lasts 5. No customers visit at night. Open the store again each morning. At night, the counter allows you to sleep early. Rarity definitions span Junk, Common, Uncommon, Rare, Epic, Legendary and Divinity; only Junk items exist so far.
 
-This build intentionally does not yet contain room purchases, debt collection, requests, sale-price negotiation, richer models, character animation, textures or a visual star map. The dock chart presents only the starter tile's regions. These are later development stages, not features hidden in this build.
+This build does not yet contain room purchases, debt collection, requests, sale-price negotiation, character animation or a visual star map. The dock chart presents only the starter tile's regions. The purchased **Cyberpunk Boat** FBX references external TGA images that were absent from the files supplied, so its geometry uses a temporary dark painted material. Its hull is modeled; walking and cargo use invisible prototype collision. The seaport FBX included its image data, and the interior textures came from the separate private repository.
+
+## Licensed art
+
+The public game source does not redistribute purchased model files or textures. During local development, the optimized Godot assets belong under `assets/licensed/` (excluded by `.gitignore`). The art-ready Windows preview packages these materials into the game data file, as allowed for incorporated project distribution by the applicable Fab license. The public GitHub Actions build uses a procedural fallback because it has no access to the private asset repository; use the separately packaged **art preview** to judge the appearance.
+
+Sources: [Stylized Fantasy Interior](https://www.fab.com/listings/2b25339f-8302-4a14-9b29-e7b17af29308), [Cyberpunk Boat](https://www.fab.com/listings/bcc484b6-69d7-4c99-884d-a8f1e993b6ab), [Medieval Seaport Town](https://www.fab.com/listings/273fce98-9e97-4e11-a791-381018ab4153). The 600 MB town FBX was trimmed to a small shoreline cluster for playable performance. The original purchased files stay in the private `Salvage-Seas-Licensed-Assets` repository and the owner's source package.
 
 ## Build
 
-Open `project.godot` in Godot 4.5.1 and run. A GitHub Actions workflow tests the old data loop and new first-person loop, then exports a Windows ZIP. The latest build can be found under the most recent successful **Windows build** run's Artifacts.
+Open `project.godot` in Godot 4.5.1 and run. With `assets/licensed/` present, you will see the art preview; without it, the prototype blockout still runs. A GitHub Actions workflow tests the old data loop and new first-person loop, then exports a fallback Windows ZIP. The art preview is separately exported from a local checkout containing the privately supplied optimized assets.
 
 The earlier interface test is still in `scenes/main.tscn` for reference, but it is no longer the main scene. See [GAME_DESIGN.md](GAME_DESIGN.md) for the longer-term design.
