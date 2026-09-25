@@ -1,9 +1,9 @@
-; Salvage Seas v0.02 — Godot 4.5.1
+; Salvage Seas v0.03 — Godot 4.5.1
 config_version=5
 
 [application]
 config/name="Salvage Seas"
-config/version="0.02"
+config/version="0.03"
 run/main_scene="res://scenes/first_person.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 

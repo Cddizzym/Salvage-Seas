@@ -25,11 +25,16 @@ var shelves := ["", "", "", "", "", "", "", ""]
 var regions := {"Shore Wrecks": 3, "Drowned Market": 3, "Broken Jetty": 3}
 var ship_region := ""
 var ship_left := 0.0
+var ship_outbound_left := 0.0
+var ship_arrival_left := 0.0
+var ship_cargo := 0
+var carrying_bundle := false
 var machine_left := 0.0
 var customer_left := 0.0
 var next_customer := 10.0
 var customer_target := -1
 var menu_open := false
+var mouse_captured := true
 var active_interaction := ""
 
 var player: CharacterBody3D
@@ -37,6 +42,10 @@ var camera: Camera3D
 var world: Node3D
 var ceiling_light: OmniLight3D
 var customer: Node3D
+var salvage_ship: Node3D
+var gangway: Node3D
+var cargo_stack: Node3D
+var carried_prop: Node3D
 var ui: CanvasLayer
 var clock_label: Label
 var hint_label: Label
@@ -115,6 +124,14 @@ func build_room(destination: String) -> void:
 	var sea := material("#344e52")
 	var rug := material("#8f3f37")
 	var metal := material("#526267", 0.3)
+	if room == "dock":
+		build_expanded_dock(timber, timber_light, timber_dark, brass, metal, sea)
+		player.position = Vector3(-13.3, 0.05, 11.5)
+		player.rotation.y = 0.0
+		camera.rotation.x = 0.0
+		refresh_carried_prop()
+		update_ui()
+		return
 
 	box(world, Vector3(0, -0.13, 0), Vector3(12.0, 0.25, 10.0), timber, true)
 	for i in range(12):
@@ -162,11 +179,8 @@ func build_room(destination: String) -> void:
 		build_shop(timber_dark, timber_light, brass)
 		player.position = Vector3(0, 0.05, 3.5)
 		player.rotation.y = 0.0
-	else:
-		build_dock(timber_dark, timber_light, brass, metal, sea)
-		player.position = Vector3(0, 0.05, 3.5)
-		player.rotation.y = 0.0
 	camera.rotation.x = 0.0
+	refresh_carried_prop()
 	refresh_goods()
 	refresh_customer()
 	update_ui()
@@ -211,28 +225,144 @@ func build_shop(wood: Material, trim: Material, brass: Material) -> void:
 	if shop_open and customer_left > 0:
 		refresh_customer()
 
-func build_dock(wood: Material, trim: Material, brass: Material, metal: Material, sea: Material) -> void:
-	var chart := box(world, Vector3(-4.6, 1.25, -2.7), Vector3(1.4, 2.1, 2.3), wood, true)
-	var chart_face := box(world, Vector3(-3.85, 1.3, -2.7), Vector3(0.05, 1.4, 1.6), sea, true)
-	tag(chart_face, "chart")
+func build_expanded_dock(wood: Material, trim: Material, dark: Material, brass: Material, metal: Material, sea: Material) -> void:
+	# About 70% of the footprint is open basin; narrow walkways flank both sides.
+	var water := StandardMaterial3D.new()
+	water.albedo_color = Color("#28525b")
+	water.metallic = 0.18
+	water.roughness = 0.25
+	box(world, Vector3(0, -1.05, 0), Vector3(23.0, 0.12, 26.5), water)
+	for i in range(17):
+		var z := -12.0 + i * 1.5
+		box(world, Vector3(0, -0.975, z), Vector3(22, 0.008, 0.035), sea)
+	# West-side working quay and a narrower opposite quay, spanning the length of the basin.
+	for x in [-13.25, 13.25]:
+		box(world, Vector3(x, -0.14, 0), Vector3(3.5, 0.28, 28.0), wood, true)
+		for z in range(-13, 14):
+			box(world, Vector3(x, 0.015, float(z)), Vector3(3.45, 0.012, 0.025), dark)
+		var rail_x := -14.82 if x < 0 else 14.82
+		for z in range(-12, 13, 3):
+			box(world, Vector3(rail_x, 0.5, float(z)), Vector3(0.13, 1.0, 0.14), trim)
+		box(world, Vector3(rail_x, 0.93, 0), Vector3(0.14, 0.12, 27.0), trim)
+	# Open water continues past the northern edge so departure is visible.
+	box(world, Vector3(0, -1.06, -22), Vector3(23, 0.12, 18), water)
+	for x in [-11.5, 11.5]:
+		box(world, Vector3(x, -0.85, 0), Vector3(0.25, 1.55, 27.0), material("#667173"))
+	# Workshop takes one short portion of the west walkway, with open quay beyond it.
+	var workshop_floor := box(world, Vector3(-13.25, 0.025, 6.6), Vector3(3.2, 0.04, 6.5), trim)
+	tag(workshop_floor, "")
+	var workbench := box(world, Vector3(-13.2, 0.52, 5.1), Vector3(2.5, 1.05, 1.2), dark, true)
+	tag(workbench, "machine")
+	var top := box(world, Vector3(-13.2, 1.12, 5.1), Vector3(2.7, 0.16, 1.35), trim, true)
+	tag(top, "machine")
+	var unpacker := box(world, Vector3(-13.2, 1.33, 5.1), Vector3(1.0, 0.28, 0.62), metal, true)
+	tag(unpacker, "machine")
+	box(world, Vector3(-12.66, 1.5, 5.1), Vector3(0.1, 0.55, 0.85), brass)
+	var chart := box(world, Vector3(-14.2, 0.72, 10.5), Vector3(0.9, 1.45, 1.2), dark, true)
 	tag(chart, "chart")
-	var table := box(world, Vector3(1.65, 0.58, -2.75), Vector3(2.7, 1.15, 1.5), wood, true)
-	var tabletop := box(world, Vector3(1.65, 1.2, -2.75), Vector3(3.0, 0.16, 1.7), trim, true)
-	tag(tabletop, "machine")
-	tag(table, "machine")
-	var processor := box(world, Vector3(1.65, 1.36, -2.75), Vector3(0.9, 0.2, 0.7), metal, true)
-	tag(processor, "machine")
-	for i in range(3):
-		box(world, Vector3(3.7, 0.3 + i * 0.58, -3.4), Vector3(0.85, 0.55, 0.7), wood, true)
-	var hatch := box(world, Vector3(-2.6, 0.12, 0.7), Vector3(2.0, 0.2, 3.7), sea)
-	tag(hatch, "chart")
-	box(world, Vector3(-1.48, 0.2, 0.7), Vector3(0.12, 0.35, 3.8), brass)
-	box(world, Vector3(-3.72, 0.2, 0.7), Vector3(0.12, 0.35, 3.8), brass)
-	var doorway := box(world, Vector3(0, 0.08, 4.72), Vector3(2.1, 0.15, 0.45), trim)
-	tag(doorway, "shop_door")
-	box(world, Vector3(0, 2.4, 4.8), Vector3(2.1, 0.13, 0.12), brass)
-	box(world, Vector3(2.6, 1.35, 3.8), Vector3(2.0, 0.75, 0.12), sea)
-	box(world, Vector3(2.6, 1.35, 3.73), Vector3(2.15, 0.85, 0.05), brass)
+	var face := box(world, Vector3(-13.7, 1.23, 10.5), Vector3(0.08, 0.65, 1.0), sea, true)
+	tag(face, "chart")
+	box(world, Vector3(-13.64, 1.25, 10.5), Vector3(0.02, 0.05, 0.95), brass)
+	for z in [-9.0, 1.5, 9.0]:
+		box(world, Vector3(-14.0, 0.38, z), Vector3(0.9, 0.75, 1.1), dark, true)
+	# Walkable southern entrance leading to the shop.
+	var exit_mark := box(world, Vector3(-13.25, 0.025, 13.78), Vector3(2.9, 0.04, 0.35), brass)
+	tag(exit_mark, "shop_door")
+	box(world, Vector3(-13.25, 2.85, 13.84), Vector3(2.95, 0.2, 0.25), brass)
+	# A directional sun and lanterns make the water, vessel and work area legible.
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48, -25, 0)
+	sun.light_color = Color("#e9d0a8")
+	sun.light_energy = 1.0
+	world.add_child(sun)
+	var light := OmniLight3D.new()
+	light.position = Vector3(-13, 3.7, 5)
+	light.light_color = Color("#ffd29b")
+	light.light_energy = 2.0
+	light.omni_range = 12
+	world.add_child(light)
+	var env_node := WorldEnvironment.new()
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color("#718c93")
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("#b9d0ce")
+	env.ambient_light_energy = 0.75
+	env_node.environment = env
+	world.add_child(env_node)
+	build_ship(wood, trim, dark, metal, brass)
+	update_ship_scene()
+
+func build_ship(wood: Material, trim: Material, dark: Material, metal: Material, brass: Material) -> void:
+	salvage_ship = Node3D.new()
+	salvage_ship.name = "SalvageShip"
+	world.add_child(salvage_ship)
+	# The boarding deck meets the quay at exactly the same height.
+	box(salvage_ship, Vector3(0, -0.16, 0), Vector3(3.8, 0.32, 8.1), wood, true)
+	box(salvage_ship, Vector3(0, -0.72, 0), Vector3(3.4, 1.1, 7.7), dark)
+	for x in [-1.85, 1.85]:
+		box(salvage_ship, Vector3(x, 0.38, 0), Vector3(0.12, 0.7, 7.9), trim)
+		for z in [-3.5, -2.0, 0.0, 2.0, 3.5]:
+			box(salvage_ship, Vector3(x, 0.85, z), Vector3(0.12, 0.9, 0.12), metal)
+	box(salvage_ship, Vector3(0, 0.65, -2.8), Vector3(2.0, 1.3, 1.8), dark, true)
+	box(salvage_ship, Vector3(0, 1.42, -2.8), Vector3(2.2, 0.18, 2.0), trim)
+	box(salvage_ship, Vector3(0, 1.05, -1.84), Vector3(1.2, 0.4, 0.05), material("#618b94"))
+	box(salvage_ship, Vector3(0, 0.05, 3.6), Vector3(3.3, 0.08, 0.3), brass)
+	cargo_stack = Node3D.new()
+	cargo_stack.name = "CargoHold"
+	cargo_stack.position = Vector3(0.3, 0, 1.0)
+	salvage_ship.add_child(cargo_stack)
+	gangway = Node3D.new()
+	gangway.name = "Gangway"
+	world.add_child(gangway)
+	box(gangway, Vector3(-10.58, -0.085, -3.0), Vector3(2.1, 0.17, 1.6), trim, true)
+	for z in [-3.65, -2.35]:
+		box(gangway, Vector3(-10.58, 0.17, z), Vector3(2.0, 0.07, 0.08), brass)
+	refresh_cargo_visual()
+
+func refresh_cargo_visual() -> void:
+	if not is_instance_valid(cargo_stack): return
+	for child in cargo_stack.get_children():
+		cargo_stack.remove_child(child)
+		child.queue_free()
+	for i in range(ship_cargo):
+		var crate := box(cargo_stack, Vector3(-0.55 + i * 1.1, 0.27, 0), Vector3(0.85, 0.54, 0.75), material("#957253"), true)
+		tag(crate, "ship_cargo")
+		var lid := box(cargo_stack, Vector3(-0.55 + i * 1.1, 0.56, 0), Vector3(0.92, 0.07, 0.82), material("#d1ae72"), true)
+		tag(lid, "ship_cargo")
+
+func refresh_carried_prop() -> void:
+	if is_instance_valid(carried_prop):
+		camera.remove_child(carried_prop)
+		carried_prop.queue_free()
+	carried_prop = null
+	if not carrying_bundle: return
+	carried_prop = Node3D.new()
+	carried_prop.position = Vector3(0.42, -0.47, -0.75)
+	camera.add_child(carried_prop)
+	box(carried_prop, Vector3.ZERO, Vector3(0.45, 0.34, 0.35), material("#967656"))
+	box(carried_prop, Vector3(0, 0.19, 0), Vector3(0.48, 0.05, 0.38), material("#c9aa70"))
+
+func set_walkable(node: Node3D, enabled: bool) -> void:
+	for body in node.find_children("*", "StaticBody3D", true, false):
+		(body as StaticBody3D).collision_layer = 1 if enabled else 0
+
+func ship_docked() -> bool:
+	return ship_left <= 0.0 and ship_outbound_left <= 0.0 and ship_arrival_left <= 0.0
+
+func update_ship_scene() -> void:
+	if room != "dock" or not is_instance_valid(salvage_ship): return
+	var visible_ship := ship_docked() or ship_outbound_left > 0.0 or ship_arrival_left > 0.0
+	salvage_ship.visible = visible_ship
+	set_walkable(salvage_ship, ship_docked())
+	gangway.visible = ship_docked()
+	set_walkable(gangway, ship_docked())
+	if ship_outbound_left > 0:
+		salvage_ship.position = Vector3(-7.75, 0, -3.0 - (1.0 - ship_outbound_left / 8.0) * 17.0)
+	elif ship_arrival_left > 0:
+		salvage_ship.position = Vector3(-7.75, 0, -3.0 - (ship_arrival_left / 8.0) * 17.0)
+	else:
+		salvage_ship.position = Vector3(-7.75, 0, -3.0)
 
 func refresh_goods() -> void:
 	for existing in shelf_goods:
@@ -364,6 +494,7 @@ func button(text_value: String, callback: Callable) -> Button:
 func open_menu(kind: String) -> void:
 	active_interaction = kind
 	menu_open = true
+	mouse_captured = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	center_label.visible = false
 	for c in overlay_body.get_children():
@@ -375,20 +506,24 @@ func open_menu(kind: String) -> void:
 		overlay_body.add_child(label("Your starter ship cannot reach the other star-linked world tiles yet.", 15))
 		if ship_left > 0:
 			overlay_body.add_child(label("Ship at %s: %s remaining" % [ship_region, time_left(ship_left)], 17))
+		elif ship_cargo > 0:
+			overlay_body.add_child(label("%d bundles remain aboard. Carry them to the worktable before dispatching again." % ship_cargo, 16))
 		for raw_name in regions.keys():
 			var name := str(raw_name)
 			var b := button("%s   •   %d recoveries left   •   3:30" % [name, regions[name]], launch_ship.bind(name))
-			b.disabled = ship_left > 0 or regions[name] <= 0 or phase == "night"
+			b.disabled = not ship_docked() or ship_cargo > 0 or carrying_bundle or regions[name] <= 0 or phase == "night"
 			overlay_body.add_child(b)
 	elif kind == "machine":
 		overlay_body.add_child(label("DOCK WORKTABLE", 25, Color("#f1d5a0")))
-		overlay_body.add_child(label("Salvaged Junk Bundles: %d" % stock.bundle))
+		overlay_body.add_child(label("Carrying a Salvaged Junk Bundle" if carrying_bundle else "Walk onto the ship and pick up a bundle from its hold."))
 		overlay_body.add_child(label("Unpack one bundle into Crude Wood, Oxidized Copper and Crumbling Stone Plates. Takes 20 seconds of game time.", 16))
 		if machine_left > 0:
 			overlay_body.add_child(label("Machine running: %s remaining" % time_left(machine_left)))
-		var b := button("Unpack a Bundle", start_machine)
-		b.disabled = machine_left > 0 or stock.bundle <= 0
+		var b := button("Place Carried Bundle into Machine", start_machine)
+		b.disabled = machine_left > 0 or not carrying_bundle
 		overlay_body.add_child(b)
+		if stock.bundle > 0:
+			overlay_body.add_child(button("Unpack stored bundle (old save)", unpack_stored_bundle))
 	elif kind.begins_with("slot:"):
 		var index := int(kind.trim_prefix("slot:"))
 		overlay_body.add_child(label("SHELF %d  •  SLOT %d" % [int(index / 4) + 1, index % 4 + 1], 25, Color("#f1d5a0")))
@@ -416,6 +551,7 @@ func open_menu(kind: String) -> void:
 
 func close_menu() -> void:
 	menu_open = false
+	mouse_captured = true
 	overlay.visible = false
 	center_label.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -425,18 +561,36 @@ func notice(value: String) -> void:
 	note_left = 5.0
 
 func launch_ship(region_name: String) -> void:
-	if ship_left > 0 or regions[region_name] <= 0 or phase == "night": return
+	if not ship_docked() or ship_cargo > 0 or carrying_bundle or regions[region_name] <= 0 or phase == "night": return
 	ship_region = region_name
 	ship_left = SALVAGE_SECONDS
+	ship_outbound_left = 8.0
+	update_ship_scene()
 	notice("Your ship departed for %s. Return in 3:30." % region_name)
 	close_menu()
 
 func start_machine() -> void:
+	if machine_left > 0 or not carrying_bundle: return
+	carrying_bundle = false
+	refresh_carried_prop()
+	machine_left = UNPACK_SECONDS
+	notice("Bundle placed in the unpacker. It will finish in 20 seconds.")
+	close_menu()
+
+func unpack_stored_bundle() -> void:
 	if machine_left > 0 or stock.bundle <= 0: return
 	stock.bundle -= 1
 	machine_left = UNPACK_SECONDS
-	notice("The worktable is unpacking a Salvaged Junk Bundle.")
+	notice("Unpacking a bundle kept in an earlier save.")
 	close_menu()
+
+func pick_up_cargo() -> void:
+	if not ship_docked() or ship_cargo <= 0 or carrying_bundle: return
+	ship_cargo -= 1
+	carrying_bundle = true
+	refresh_cargo_visual()
+	refresh_carried_prop()
+	notice("Bundle in hand. Walk across the gangway and place it in the worktable.")
 
 func stock_shelf(index: int, id: String) -> void:
 	if shelves[index] != "" or stock[id] <= 0: return
@@ -486,7 +640,7 @@ func time_left(seconds: float) -> String:
 func update_ui() -> void:
 	if not is_instance_valid(clock_label): return
 	var remaining := (DAY_SECONDS - elapsed) if phase == "day" else (NIGHT_SECONDS - elapsed)
-	clock_label.text = "DAY %d   •   %s %s   •   £%d%s" % [day, phase.to_upper(), time_left(remaining), money, "   •   PAUSED" if paused else ""]
+	clock_label.text = "DAY %d   •   %s %s   •   £%d%s%s" % [day, phase.to_upper(), time_left(remaining), money, "   •   CARRYING BUNDLE" if carrying_bundle else "", "   •   PAUSED" if paused else ""]
 	if menu_open: return
 	var target := look_target()
 	var message_text := ""
@@ -495,7 +649,8 @@ func update_ui() -> void:
 		message_text = "[E] %s" % (ITEMS[shelves[index]].name if shelves[index] != "" else "Stock empty shelf slot")
 	elif target == "counter": message_text = "[E] Shop counter"
 	elif target == "chart": message_text = "[E] Homewater salvage chart"
-	elif target == "machine": message_text = "[E] Unpacking worktable"
+	elif target == "machine": message_text = "[E] Place bundle into unpacker" if carrying_bundle else "[E] Unpacking worktable"
+	elif target == "ship_cargo": message_text = "[E] Pick up Salvaged Junk Bundle" if not carrying_bundle else "Take your bundle to the worktable"
 	elif target.ends_with("_door"): message_text = "[E] Enter %s" % ("Dock" if target == "dock_door" else "Shop")
 	hint_label.text = message_text if message_text != "" else "WASD move  •  Mouse look  •  E interact  •  P pause  •  F5 save  •  F9 load  •  Esc release mouse"
 
@@ -515,15 +670,19 @@ func look_target() -> String:
 		hit = hit.get_parent()
 	return ""
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+func _input(event: InputEvent) -> void:
+	# GUI Controls consume unhandled mouse motion even when visually transparent.
+	# _input runs before the UI layer and keeps first-person look responsive.
+	if event is InputEventMouseMotion and mouse_captured and not menu_open:
 		player.rotate_y(-event.relative.x * 0.0024)
 		camera.rotation.x = clampf(camera.rotation.x - event.relative.y * 0.0024, -1.35, 1.35)
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_ESCAPE:
 				if menu_open: close_menu()
-				else: Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+				else:
+					mouse_captured = not mouse_captured
+					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if mouse_captured else Input.MOUSE_MODE_VISIBLE
 			KEY_P:
 				paused = not paused
 				notice("Time paused: customers, ship and machine are stopped." if paused else "Time resumed.")
@@ -532,10 +691,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_E:
 				if not menu_open:
 					var target := look_target()
-					if target == "dock_door": build_room("dock")
-					elif target == "shop_door": build_room("shop")
+					if target == "ship_cargo": pick_up_cargo()
+					elif target == "machine" and carrying_bundle: start_machine()
+					elif target == "dock_door": build_room("dock")
+					elif target == "shop_door": enter_shop()
 					elif target != "": open_menu(target)
-	if event is InputEventMouseButton and event.pressed and not menu_open and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+	if event is InputEventMouseButton and event.pressed and not menu_open and not mouse_captured:
+		mouse_captured = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta: float) -> void:
@@ -551,8 +713,21 @@ func _physics_process(delta: float) -> void:
 	player.velocity.z = direction.z * 3.4
 	player.velocity.y -= 18.0 * delta
 	player.move_and_slide()
-	if player.position.z > 4.85 and absf(player.position.x) < 1.15:
-		build_room("dock" if room == "shop" else "shop")
+	if room == "shop" and player.position.z > 4.85 and absf(player.position.x) < 1.15:
+		build_room("dock")
+	elif room == "dock" and player.position.z > 13.65 and absf(player.position.x + 13.25) < 1.4:
+		enter_shop()
+	if room == "dock" and player.position.y < -2.0:
+		player.position = Vector3(-13.25, 0.05, 8.8)
+		player.velocity = Vector3.ZERO
+		notice("You climbed back onto the quay.")
+
+func enter_shop() -> void:
+	if carrying_bundle:
+		player.position.z = 12.8
+		notice("Put the bundle into the unpacker before entering the shop.")
+	else:
+		build_room("shop")
 
 func _process(delta: float) -> void:
 	if note_left > 0:
@@ -569,14 +744,23 @@ func _process(delta: float) -> void:
 			notice("Nightfall. No more customers. Use the workshop, stock shelves, or sleep.")
 		elif phase == "night" and elapsed >= NIGHT_SECONDS:
 			new_day()
+		if ship_outbound_left > 0:
+			ship_outbound_left = maxf(0, ship_outbound_left - delta)
+			update_ship_scene()
+		if ship_arrival_left > 0:
+			ship_arrival_left = maxf(0, ship_arrival_left - delta)
+			update_ship_scene()
 		if ship_left > 0:
 			ship_left -= delta
 			if ship_left <= 0:
 				ship_left = 0
 				regions[ship_region] = maxi(0, regions[ship_region] - 1)
-				stock.bundle += 2
-				notice("Ship returned from %s with 2 Junk Bundles." % ship_region)
+				ship_cargo += 2
+				ship_arrival_left = 8.0
+				refresh_cargo_visual()
+				notice("Your ship is entering the dock with 2 Junk Bundles aboard.")
 				ship_region = ""
+				update_ship_scene()
 		if machine_left > 0:
 			machine_left -= delta
 			if machine_left <= 0:
@@ -619,7 +803,9 @@ func finish_customer() -> void:
 func save_game(show_notice := true) -> void:
 	var data := {"day": day, "phase": phase, "elapsed": elapsed, "money": money,
 		"stock": stock, "shelves": shelves, "regions": regions,
-		"ship_region": ship_region, "ship_left": ship_left, "machine_left": machine_left,
+		"ship_region": ship_region, "ship_left": ship_left, "ship_cargo": ship_cargo,
+		"carrying_bundle": carrying_bundle, "ship_outbound_left": ship_outbound_left,
+		"ship_arrival_left": ship_arrival_left, "machine_left": machine_left,
 		"shop_open": shop_open, "next_customer": next_customer}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -648,6 +834,10 @@ func load_game() -> void:
 	for id in regions.keys(): regions[id] = maxi(0, int(data.get("regions", {}).get(id, 3)))
 	ship_region = str(data.get("ship_region", ""))
 	ship_left = maxf(0, float(data.get("ship_left", 0))) if regions.has(ship_region) else 0
+	ship_cargo = maxi(0, int(data.get("ship_cargo", 0)))
+	carrying_bundle = bool(data.get("carrying_bundle", false))
+	ship_outbound_left = clampf(float(data.get("ship_outbound_left", 0)), 0, 8) if ship_left > 0 else 0
+	ship_arrival_left = clampf(float(data.get("ship_arrival_left", 0)), 0, 8) if ship_left <= 0 else 0
 	machine_left = maxf(0, float(data.get("machine_left", 0)))
 	shop_open = bool(data.get("shop_open", false)) and phase == "day"
 	next_customer = float(data.get("next_customer", 10))

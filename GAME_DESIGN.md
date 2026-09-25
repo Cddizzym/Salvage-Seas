@@ -1,6 +1,10 @@
 # Salvage Seas — Shopkeeping Game Concept
 
-Status: updated 25 September 2026. The v0.01 interface prototype did not meet the desired feel. v0.02 switches the playable starting scene to a first-person 3D shop and dock; the wider design remains in development.
+Status: updated 25 September 2026. The v0.01 interface prototype did not meet the desired feel. v0.02 introduced a first-person 3D shop; v0.03 fixes mouse look and replaces the tiny dock with a large open basin and manual ship unloading. The wider design remains in development.
+
+## v0.03 dock and cargo handling
+
+The dock is now mostly open water, flanked by narrow walkable quays. A small unpacking workshop occupies part of the west quay. The starter vessel moors next to that quay, accessible over a gangway. Dispatch it from the salvage chart; it visibly departs, spends 3 minutes 30 seconds on its trip, and visibly returns. Recoveries are loaded into its cargo hold, not teleported to storage. Walk aboard, pick up one Salvaged Junk Bundle, walk back over the gangway, and place it in the unpacking machine. Repeat for the second bundle. The 20-second machine timer produces the three starter materials. The ship cannot leave while uncollected cargo remains aboard.
 
 ## Visual and interaction correction
 
@@ -93,7 +97,7 @@ A darker maritime atmosphere is a proposed continuation of the earlier project's
 
 ## First playable target
 
-Implemented v0.02 scope: a physical shop and dock with three starter salvage regions accessed through a chart, four starter items, one unpacking machine, fixed base-price sales, two shelves with four physical slots each, simple wandering customers, a real-time day/night cycle, global pause, and save/load. The full visual star map, requests, debt payments, room purchases, larger item footprints and a broader economy are not yet implemented. The old v0.01 interface remains in the repository for reference but is not the playable starting scene.
+Implemented v0.03 scope: a physical shop, an enlarged walkable dock around an open basin, a moored/departing/returning ship, manual one-at-a-time cargo carrying, three starter salvage regions accessed through a chart, four starter items, one unpacking machine, fixed base-price sales, two shelves with four physical slots each, simple wandering customers, a real-time day/night cycle, global pause, and save/load. The full visual star map, requests, debt payments, room purchases, larger item footprints and a broader economy are not yet implemented. The old v0.01 interface remains in the repository for reference but is not the playable starting scene.
 
 Completion criteria:
 
